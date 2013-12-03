@@ -10,6 +10,7 @@ import java.util.ListIterator;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.util.Log;
 
 /**
  *
@@ -23,12 +24,13 @@ public class PageImages {
 	public PageImages(MangaSource mSource) {
 		this.mangaSource = mSource;
 		this.currentPageBitmap = this.mangaSource.loadCurrentPage();
-		this.cutPageToScene();
+		//this.cutPageToScene();
+		this.listScene.add(this.currentPageBitmap);
 	}
 	
 	/**
-	 * копируем часть изображения в новое
-	 * @return bitmap нового изображения
+	 * РєРѕРїРёСЂСѓРµРј С‡Р°СЃС‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РІ РЅРѕРІРѕРµ
+	 * @return bitmap РЅРѕРІРѕРіРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
 	 */
 	private Bitmap copySegmentImg(Bitmap img, int x1, int y1, int x2, int y2) {
 		int width = x2-x1;
@@ -41,39 +43,40 @@ public class PageImages {
 	}
 	
 	/**
-	 * делим изображение на сцены по высоте
+	 * РґРµР»РёРј РёР·РѕР±СЂР°Р¶РµРЅРёРµ РЅР° СЃС†РµРЅС‹ РїРѕ РІС‹СЃРѕС‚Рµ
 	 */
 	private boolean cutByHeight(int index){
+		if(listScene.size()>index) return false;
 		Bitmap img = listScene.remove(index); //   
 		
 		int widthImg = img.getWidth();
 		int heightImg = img.getHeight();
 		
-		boolean isWhiteLine;   // для определения белых линий
-		boolean isScena = false; // сцену еще не нашли
-		int countScene = 0; // количество найденых сцен
+		boolean isWhiteLine;   // РґР»СЏ РѕРїСЂРµРґРµР»РµРЅРёСЏ Р±РµР»С‹С… Р»РёРЅРёР№
+		boolean isScena = false; // СЃС†РµРЅСѓ РµС‰Рµ РЅРµ РЅР°С€Р»Рё
+		int countScene = 0; // РєРѕР»РёС‡РµСЃС‚РІРѕ РЅР°Р№РґРµРЅС‹С… СЃС†РµРЅ
 		
 		int startScena = heightImg;
 		
-		for(int h = heightImg; h >= 0; h++){ // начнем с низу
-			isWhiteLine = true; // предположим что это белая полоса
+		for(int h = heightImg-1; h >= 0; h--){ // РЅР°С‡РЅРµРј СЃ РЅРёР·Сѓ
+			isWhiteLine = true; // РїСЂРµРґРїРѕР»РѕР¶РёРј С‡С‚Рѕ СЌС‚Рѕ Р±РµР»Р°СЏ РїРѕР»РѕСЃР°
 			for(int w = 0; w < widthImg; w++){
 				if(img.getPixel(w, h) != Color.WHITE){
-					isWhiteLine = false; // ошиблись
+					isWhiteLine = false; // РѕС€РёР±Р»РёСЃСЊ
 					break;
 				}
 			}
 			
-			if(isWhiteLine && !isScena){ // белая полоса и на сцену еще не наткнулись
+			if(isWhiteLine && !isScena){ // Р±РµР»Р°СЏ РїРѕР»РѕСЃР° Рё РЅР° СЃС†РµРЅСѓ РµС‰Рµ РЅРµ РЅР°С‚РєРЅСѓР»РёСЃСЊ
 				
-			} else if(isWhiteLine && isScena){ // белая полоса после сцены
-				// сцена закончилась
+			} else if(isWhiteLine && isScena){ // Р±РµР»Р°СЏ РїРѕР»РѕСЃР° РїРѕСЃР»Рµ СЃС†РµРЅС‹
+				// СЃС†РµРЅР° Р·Р°РєРѕРЅС‡РёР»Р°СЃСЊ
 				Bitmap scene = this.copySegmentImg(img, 0, h, widthImg, startScena);
 				listScene.add(index, scene);
 				countScene++;
-			} else if(!isWhiteLine && isScena){ // идем по сцене, до белой полосы еще не дошли
+			} else if(!isWhiteLine && isScena){ // РёРґРµРј РїРѕ СЃС†РµРЅРµ, РґРѕ Р±РµР»РѕР№ РїРѕР»РѕСЃС‹ РµС‰Рµ РЅРµ РґРѕС€Р»Рё
 				
-			} else if(!isWhiteLine && !isScena){ // Наткнулись на первую линию сцены
+			} else if(!isWhiteLine && !isScena){ // РќР°С‚РєРЅСѓР»РёСЃСЊ РЅР° РїРµСЂРІСѓСЋ Р»РёРЅРёСЋ СЃС†РµРЅС‹
 				startScena = h;
 			}
 		}
@@ -84,39 +87,40 @@ public class PageImages {
 	}
 	
 	/**
-	 * делим изображение на сцены по ширине
+	 * РґРµР»РёРј РёР·РѕР±СЂР°Р¶РµРЅРёРµ РЅР° СЃС†РµРЅС‹ РїРѕ С€РёСЂРёРЅРµ
 	 */
 	private boolean cutByWeigth(int index){
+		if(listScene.size()>index) return false;
 		Bitmap img = listScene.remove(index);
 		
 		int widthImg = img.getWidth();
 		int heightImg = img.getHeight();
 		
-		boolean isWhiteLine;   // для определения белых линий
-		boolean isScena = false; // сцену еще не нашли
-		int countScene = 0; // количество найденых сцен
+		boolean isWhiteLine;   // РґР»СЏ РѕРїСЂРµРґРµР»РµРЅРёСЏ Р±РµР»С‹С… Р»РёРЅРёР№
+		boolean isScena = false; // СЃС†РµРЅСѓ РµС‰Рµ РЅРµ РЅР°С€Р»Рё
+		int countScene = 0; // РєРѕР»РёС‡РµСЃС‚РІРѕ РЅР°Р№РґРµРЅС‹С… СЃС†РµРЅ
 		
 		int startScena = 0;
 		
-		for(int w = widthImg; w >= 0; w++){ // начнем с низу
-			isWhiteLine = true; // предположим что это белая полоса
+		for(int w = widthImg; w >= 0; w++){ // РЅР°С‡РЅРµРј СЃ РЅРёР·Сѓ
+			isWhiteLine = true; // РїСЂРµРґРїРѕР»РѕР¶РёРј С‡С‚Рѕ СЌС‚Рѕ Р±РµР»Р°СЏ РїРѕР»РѕСЃР°
 			for(int h = 0; h < heightImg; h++){
 				if(img.getPixel(w, h) != Color.WHITE){
-					isWhiteLine = false; // ошиблись
+					isWhiteLine = false; // РѕС€РёР±Р»РёСЃСЊ
 					break;
 				}
 			}
 			
-			if(isWhiteLine && !isScena){ // белая полоса и на сцену еще не наткнулись
+			if(isWhiteLine && !isScena){ // Р±РµР»Р°СЏ РїРѕР»РѕСЃР° Рё РЅР° СЃС†РµРЅСѓ РµС‰Рµ РЅРµ РЅР°С‚РєРЅСѓР»РёСЃСЊ
 				
-			} else if(isWhiteLine && isScena){ // белая полоса после сцены
-				// сцена закончилась
+			} else if(isWhiteLine && isScena){ // Р±РµР»Р°СЏ РїРѕР»РѕСЃР° РїРѕСЃР»Рµ СЃС†РµРЅС‹
+				// СЃС†РµРЅР° Р·Р°РєРѕРЅС‡РёР»Р°СЃСЊ
 				Bitmap scene = this.copySegmentImg(img, startScena, 0, w, heightImg);
 				listScene.add(index, scene);
 				countScene++;
-			} else if(!isWhiteLine && isScena){ // идем по сцене, до белой полосы еще не дошли
+			} else if(!isWhiteLine && isScena){ // РёРґРµРј РїРѕ СЃС†РµРЅРµ, РґРѕ Р±РµР»РѕР№ РїРѕР»РѕСЃС‹ РµС‰Рµ РЅРµ РґРѕС€Р»Рё
 				
-			} else if(!isWhiteLine && !isScena){ // Наткнулись на первую линию сцены
+			} else if(!isWhiteLine && !isScena){ // РќР°С‚РєРЅСѓР»РёСЃСЊ РЅР° РїРµСЂРІСѓСЋ Р»РёРЅРёСЋ СЃС†РµРЅС‹
 				startScena = w;
 			}
 		}
@@ -127,8 +131,8 @@ public class PageImages {
 	}
 	
 	/**
-	 * Рубим страницу на сцены. Изображение страницы очищаем, память ведь не резиновая :)
-	 * @return true - удача, false - что то пошло не так
+	 * Р СѓР±РёРј СЃС‚СЂР°РЅРёС†Сѓ РЅР° СЃС†РµРЅС‹. РР·РѕР±СЂР°Р¶РµРЅРёРµ СЃС‚СЂР°РЅРёС†С‹ РѕС‡РёС‰Р°РµРј, РїР°РјСЏС‚СЊ РІРµРґСЊ РЅРµ СЂРµР·РёРЅРѕРІР°СЏ :)
+	 * @return true - СѓРґР°С‡Р°, false - С‡С‚Рѕ С‚Рѕ РїРѕС€Р»Рѕ РЅРµ С‚Р°Рє
 	 */
 	private boolean cutPageToScene(){
 		if(this.currentPageBitmap == null){
@@ -138,7 +142,11 @@ public class PageImages {
 		listScene.clear();
 		listScene.add(currentPageBitmap);
 		
+		boolean isCutH = false;
+		boolean isCutW = false;
+		
 		for(int cur = 0; cur < listScene.size();){
+			
 			if(!(cutByHeight(cur) || cutByWeigth(cur))){
 				cur++;
 			}
@@ -154,9 +162,9 @@ public class PageImages {
 	}
 	
 	/**
-	 * Следующая сцена, если сцены на странице закончились 
-	 * запрашиваем следующую страницу из источника
-	 * @return Bitmap сцены, либо null если изображение не доступно
+	 * РЎР»РµРґСѓСЋС‰Р°СЏ СЃС†РµРЅР°, РµСЃР»Рё СЃС†РµРЅС‹ РЅР° СЃС‚СЂР°РЅРёС†Рµ Р·Р°РєРѕРЅС‡РёР»РёСЃСЊ 
+	 * Р·Р°РїСЂР°С€РёРІР°РµРј СЃР»РµРґСѓСЋС‰СѓСЋ СЃС‚СЂР°РЅРёС†Сѓ РёР· РёСЃС‚РѕС‡РЅРёРєР°
+	 * @return Bitmap СЃС†РµРЅС‹, Р»РёР±Рѕ null РµСЃР»Рё РёР·РѕР±СЂР°Р¶РµРЅРёРµ РЅРµ РґРѕСЃС‚СѓРїРЅРѕ
 	 */
 	public Bitmap next(){
 		if(listScene.size() > this.currentIndex+1){
@@ -172,9 +180,9 @@ public class PageImages {
 	}
 	
 	/**
-	 * Предыдущая сцена, если сцены на странице закончились 
-	 * запрашиваем предыдующую страницу из источника
-	 * @return Bitmap сцены, либо null если изображение не доступно
+	 * РџСЂРµРґС‹РґСѓС‰Р°СЏ СЃС†РµРЅР°, РµСЃР»Рё СЃС†РµРЅС‹ РЅР° СЃС‚СЂР°РЅРёС†Рµ Р·Р°РєРѕРЅС‡РёР»РёСЃСЊ 
+	 * Р·Р°РїСЂР°С€РёРІР°РµРј РїСЂРµРґС‹РґСѓСЋС‰СѓСЋ СЃС‚СЂР°РЅРёС†Сѓ РёР· РёСЃС‚РѕС‡РЅРёРєР°
+	 * @return Bitmap СЃС†РµРЅС‹, Р»РёР±Рѕ null РµСЃР»Рё РёР·РѕР±СЂР°Р¶РµРЅРёРµ РЅРµ РґРѕСЃС‚СѓРїРЅРѕ
 	 */
 	public Bitmap prev(){
 		if(0 < this.currentIndex){
@@ -190,11 +198,15 @@ public class PageImages {
 	}
 	
 	/**
-	 * Текущая сцена 
-	 * @return Bitmap сцены, либо null если изображение не доступно
+	 * РўРµРєСѓС‰Р°СЏ СЃС†РµРЅР° 
+	 * @return Bitmap СЃС†РµРЅС‹, Р»РёР±Рѕ null РµСЃР»Рё РёР·РѕР±СЂР°Р¶РµРЅРёРµ РЅРµ РґРѕСЃС‚СѓРїРЅРѕ
 	 */
 	public Bitmap current(){
-		if(listScene.size() <= this.currentIndex) return null;
+		Log.d("IMAGE", String.format("size list - %d ; current - %d", listScene.size(), currentIndex));
+		if(listScene.size() <= this.currentIndex){			
+			Log.e("IMAGE", "Current imege = null");
+			return null;
+		}
 		return this.listScene.get(this.currentIndex);
 	}
 }

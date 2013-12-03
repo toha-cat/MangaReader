@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
@@ -18,7 +19,7 @@ import android.view.View;
 import android.widget.Scroller;
 
 /**
- * view для отображения сцен
+ * view пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
  */
 public class SceneView extends View	 {
 	
@@ -75,8 +76,8 @@ public class SceneView extends View	 {
 	}
 	
 	public void reviewImage() {
-		if (image == null) return;
-		//if (image == null) throw new NullPointerException("The image can't be decoded.");
+		//if (image == null) return;
+		if (image == null) throw new NullPointerException("The image can't be decoded.");
 		
 		scaleFactor = 1;
 
@@ -94,8 +95,15 @@ public class SceneView extends View	 {
 	@Override
 	public void onDraw(Canvas canvas)
 	{
+		if(image == null) return;
 		Rect dst = new Rect(0, 0, getScaledWidth(), getScaledHeight());
-		canvas.drawBitmap(image, null, dst, paint);
+		try {
+			canvas.drawBitmap(image, null, dst, paint);
+		} catch (Exception e) {
+			// TODO: handle exception
+			Log.v("MangaReader", e.getMessage());
+			Log.v("MangaReader", e.getLocalizedMessage());
+		}
 	}
 
 	@Override
