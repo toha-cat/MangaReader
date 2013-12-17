@@ -28,21 +28,14 @@ public class MangaSource {
 	}
 
 	public Bitmap loadCurrentPage() {
-		BitmapFactory.Options options = new BitmapFactory.Options();
-		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-
-		Bitmap image = BitmapFactory.decodeFile(this.fname, options);
-		if (image == null)
-			throw new NullPointerException("The image can't be decoded.");
-
-		return image;
+		return loadImg(this.fname);
 	}
 
 	public Bitmap next() {
-		return null;
+		return loadImg("/sdcard/test2.jpg");
 	}
 
 	public Bitmap prev() {
-		return null;
+		return loadImg(this.fname);
 	}
 }

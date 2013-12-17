@@ -15,6 +15,8 @@ public class PageImages {
 	private Bitmap currentPageBitmap;
 	private ArrayList<Bitmap> listScene = new ArrayList<Bitmap>();
 	private int currentIndex = 0;
+	
+	final int MIN_LEN_SCENA = 30;
 
 	public PageImages(MangaSource mSource) {
 		this.mangaSource = mSource;
@@ -30,6 +32,7 @@ public class PageImages {
 	 */
 	private boolean isWhite(int pixel) {
 		if((pixel & 0xE0E0E0) == 0xE0E0E0){ // почти магия :)
+											// значение каждого цвета от E0 до FF
 			return true;
 		}
 		return false;
@@ -41,7 +44,6 @@ public class PageImages {
 	 * @return bitmap нового изображения
 	 */
 	private Bitmap copySegmentImg(Bitmap img, int x1, int y1, int x2, int y2) {
-		Log.d("FUNK", String.format("copySegmentImg - %d:%d:%d:%d", x1, y1, x2, y2));
 		int width = x2 - x1;
 		int height = y2 - y1;
 		Bitmap scene = Bitmap.createBitmap(width, height,
@@ -56,10 +58,8 @@ public class PageImages {
 	 * делим изображение на сцены по высоте
 	 */
 	private boolean cutByHeight(int index) {
-		Log.d("FUNK", String.format("cutByHeight - %d", index));
 		if (listScene.size() <= index)
 			return false;
-		Log.d("FUNK", "OK");
 		Bitmap img = listScene.remove(index); //
 
 		int widthImg = img.getWidth();
@@ -84,11 +84,13 @@ public class PageImages {
 											// наткнулись
 
 			} else if (isWhiteLine && isScena) { // белая полоса после сцены
-				// сцена закончилась
-				Bitmap scene = this.copySegmentImg(img, 0, h, widthImg, startScena);
-				listScene.add(index, scene);
-				countScene++;
-				isScena = false;
+				if((startScena-h) > MIN_LEN_SCENA){
+					// сцена закончилась
+					Bitmap scene = this.copySegmentImg(img, 0, h, widthImg, startScena);
+					listScene.add(index, scene);
+					countScene++;
+					isScena = false;
+				}
 			} else if (!isWhiteLine && isScena) { 	// идем по сцене, до белой
 													// полосы еще не дошли
 
@@ -115,10 +117,8 @@ public class PageImages {
 	 * делим изображение на сцены по ширине
 	 */
 	private boolean cutByWeigth(int index) {
-		Log.d("FUNK", String.format("cutByWeigth - %d", index));
 		if (listScene.size() <= index)
 			return false;
-		Log.d("FUNK", "OK");
 		Bitmap img = listScene.remove(index);
 
 		int widthImg = img.getWidth();
@@ -143,11 +143,13 @@ public class PageImages {
 											// наткнулись
 
 			} else if (isWhiteLine && isScena) { // белая полоса после сцены
-				// сцена закончилась
-				Bitmap scene = this.copySegmentImg(img, startScena, 0, w, heightImg);
-				listScene.add(index, scene);
-				countScene++;
-				isScena = false;
+				if((w - startScena) > MIN_LEN_SCENA){
+					// сцена закончилась
+					Bitmap scene = this.copySegmentImg(img, startScena, 0, w, heightImg);
+					listScene.add(index, scene);
+					countScene++;
+					isScena = false;
+				}
 			} else if (!isWhiteLine && isScena) { // идем по сцене, до белой
 													// полосы еще не дошли
 
@@ -217,7 +219,7 @@ public class PageImages {
 			return this.listScene.get(this.currentIndex);
 		} else {
 			this.currentPageBitmap = this.mangaSource.next();
-			if (this.cutPageToScene()) {
+			if (this.cutPageToScene() && this.listScene.size() >= 0) {
 				return this.listScene.get(this.currentIndex);
 			}
 		}
@@ -236,7 +238,8 @@ public class PageImages {
 			return this.listScene.get(this.currentIndex);
 		} else {
 			this.currentPageBitmap = this.mangaSource.prev();
-			if (this.cutPageToScene()) {
+			if (this.cutPageToScene() && this.listScene.size() >= 0) {
+				this.currentIndex = this.listScene.size()-1;
 				return this.listScene.get(this.currentIndex);
 			}
 		}
@@ -249,10 +252,7 @@ public class PageImages {
 	 * @return Bitmap сцены, либо null если изображение не доступно
 	 */
 	public Bitmap current() {
-		Log.d("IMAGE", String.format("size list - %d ; current - %d",
-				listScene.size(), currentIndex));
 		if (listScene.size() <= this.currentIndex) {
-			Log.e("IMAGE", "Current imege = null");
 			return null;
 		}
 		return this.listScene.get(this.currentIndex);

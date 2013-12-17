@@ -20,7 +20,7 @@ import android.view.View;
 import android.widget.Scroller;
 
 /**
- * view ��� ����������� ����
+ * view для отображения сцен
  */
 public class SceneView extends View {
 
@@ -36,12 +36,15 @@ public class SceneView extends View {
 	private final Paint paint = new Paint();
 
 	private float scaleFactor;
+	private float minScaleFactor;
 
 	private int getScaledWidth() {
+		if(image == null) return 0;
 		return (int) (image.getWidth() * scaleFactor);
 	}
 
 	private int getScaledHeight() {
+		if(image == null) return 0;
 		return (int) (image.getHeight() * scaleFactor);
 	}
 
@@ -49,8 +52,7 @@ public class SceneView extends View {
 		super(context);
 
 		gestureDetector = new GestureDetector(context, new MyGestureListener());
-		scaleGestureDetector = new ScaleGestureDetector(context,
-				new MyScaleGestureListener());
+		scaleGestureDetector = new ScaleGestureDetector(context, new MyScaleGestureListener());
 
 		// init scrollbars
 		setHorizontalScrollBarEnabled(true);
@@ -70,28 +72,45 @@ public class SceneView extends View {
 		this.mangaSource = mSource;
 		this.pageImages = new PageImages(mSource);
 		this.image = pageImages.current();
-		reviewImage();
 	}
-
-	public void reviewImage() {
-		// if (image == null) return;
-		if (image == null)
-			throw new NullPointerException("The image can't be decoded.");
-
-		scaleFactor = 1;
-
-		// center image on the screen
-		int width = getWidth();
-		int height = getHeight();
-		if ((width != 0) || (height != 0)) {
-			int scrollX = (image.getWidth() < width ? -(width - image
-					.getWidth()) / 2 : image.getWidth() / 2);
-			int scrollY = (image.getHeight() < height ? -(height - image
-					.getHeight()) / 2 : image.getHeight() / 2);
-			scrollTo(scrollX, scrollY);
+	
+	private int loadNextImg(){
+		Log.d("NAV", "get next");
+		Bitmap img = null;
+		img = pageImages.next();
+		if(img != null){
+			this.image = img;
+			resetScaleFactor();
+			invalidate();
+			return 0;
+		}else{
+			Log.d("NAV", "prev null :(");
+			return -1;
+		}
+	}
+	
+	private int loadPrevImg(){
+		Log.d("NAV", "get prev");
+		Bitmap img = null;
+		img = pageImages.prev();
+		if(img != null){
+			this.image = img;
+			resetScaleFactor();
+			invalidate();
+			return 0;
+		}else{
+			Log.d("NAV", "prev null :(");
+			return -1;
 		}
 	}
 
+	@Override
+	 public void onWindowFocusChanged(boolean hasFocus) {
+	  // TODO Auto-generated method stub
+	  super.onWindowFocusChanged(hasFocus);
+	  //Here you can get the size!
+	 }
+	
 	@Override
 	public void onDraw(Canvas canvas) {
 		if (image == null)
@@ -105,12 +124,14 @@ public class SceneView extends View {
 			Log.v("MangaReader", e.getLocalizedMessage());
 		}
 	}
-
+	
+	// высота облости скролинга
 	@Override
 	protected int computeHorizontalScrollRange() {
 		return getScaledWidth();
 	}
 
+	// ширина области скролинга
 	@Override
 	protected int computeVerticalScrollRange() {
 		return getScaledHeight();
@@ -131,7 +152,7 @@ public class SceneView extends View {
 		// check for scroll gesture
 		if (gestureDetector.onTouchEvent(event))
 			return true;
-
+		
 		// check for pointer release
 		if ((event.getPointerCount() == 1)
 				&& ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP)) {
@@ -157,10 +178,12 @@ public class SceneView extends View {
 				awakenScrollBars(scroller.getDuration());
 			}
 		}
+		
 
 		return true;
 	}
 
+	// скролинг при броске
 	@Override
 	public void computeScroll() {
 		if (scroller.computeScrollOffset()) {
@@ -181,27 +204,37 @@ public class SceneView extends View {
 	protected void onScrollChanged(int x, int y, int oldX, int oldY) {
 	}
 
+	// персчитываем начальный маштаб для изображения
+	protected void resetScaleFactor(){
+		float width = getWidth();
+		float height = getHeight();
+		float imgW = image.getWidth();
+		float imgH = image.getHeight();
+		if(width < imgW){
+			scaleFactor = (float)width/imgW;
+		}
+		if(height < imgH * scaleFactor){
+			scaleFactor = (float)height/imgH;
+		}
+		minScaleFactor = scaleFactor;
+		Log.d("FUNK", String.format("minScaleFactor - %f", minScaleFactor));
+	}
+	
+	// метод вызывается при изменении размера области отображения
 	@Override
-	protected void onSizeChanged(int width, int height, int oldWidth,
-			int oldHeight) {
-		int scrollX = (getScaledWidth() < width ? -(width - getScaledWidth()) / 2
-				: getScaledWidth() / 2);
-		int scrollY = (getScaledHeight() < height ? -(height - getScaledHeight()) / 2
-				: getScaledHeight() / 2);
-		scrollTo(scrollX, scrollY);
+	protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
+		resetScaleFactor();
 	}
 
 	private class MyGestureListener extends SimpleOnGestureListener {
 		@Override
-		public boolean onScroll(MotionEvent e1, MotionEvent e2,
-				float distanceX, float distanceY) {
+		public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
 			scrollBy((int) distanceX, (int) distanceY);
 			return true;
 		}
-
+		
 		@Override
-		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-				float velocityY) {
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
 			int fixedScrollX = 0, fixedScrollY = 0;
 			int maxScrollX = getScaledWidth(), maxScrollY = getScaledHeight();
 
@@ -214,12 +247,22 @@ public class SceneView extends View {
 				fixedScrollY = -(getHeight() - getScaledHeight()) / 2;
 				maxScrollY = fixedScrollY + getScaledHeight();
 			}
-
+			
+			if(fixedScrollX <= 0 && scaleFactor == minScaleFactor){
+				if((int) velocityX < 0){
+					loadNextImg();
+				}else{
+					loadPrevImg();
+				}
+				return false;
+			}
+			
 			boolean scrollBeyondImage = (fixedScrollX < 0)
 					|| (fixedScrollX > maxScrollX) || (fixedScrollY < 0)
 					|| (fixedScrollY > maxScrollY);
-			if (scrollBeyondImage)
+			if (scrollBeyondImage){
 				return false;
+			}
 
 			scroller.fling(getScrollX(), getScrollY(), -(int) velocityX,
 					-(int) velocityY, 0, getScaledWidth() - getWidth(), 0,
@@ -228,19 +271,24 @@ public class SceneView extends View {
 
 			return true;
 		}
+		
 	}
-
+	// для зума
 	private class MyScaleGestureListener implements OnScaleGestureListener {
 		public boolean onScale(ScaleGestureDetector detector) {
+			if(scaleFactor == 0) scaleFactor = 1;
 			scaleFactor *= detector.getScaleFactor();
+			if(scaleFactor < minScaleFactor){
+				scaleFactor = minScaleFactor;
+			}else{
+				int newScrollX = (int) ((getScrollX() + detector.getFocusX())
+						* detector.getScaleFactor() - detector.getFocusX());
+				int newScrollY = (int) ((getScrollY() + detector.getFocusY())
+						* detector.getScaleFactor() - detector.getFocusY());
+				scrollTo(newScrollX, newScrollY);
 
-			int newScrollX = (int) ((getScrollX() + detector.getFocusX())
-					* detector.getScaleFactor() - detector.getFocusX());
-			int newScrollY = (int) ((getScrollY() + detector.getFocusY())
-					* detector.getScaleFactor() - detector.getFocusY());
-			scrollTo(newScrollX, newScrollY);
-
-			invalidate();
+				invalidate();
+			}
 
 			return true;
 		}
