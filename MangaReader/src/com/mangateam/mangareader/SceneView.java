@@ -195,7 +195,6 @@ public class SceneView extends View {
 			if (oldX != getScrollX() || oldY != getScrollY()) {
 				onScrollChanged(getScrollX(), getScrollY(), oldX, oldY);
 			}
-
 			postInvalidate();
 		}
 	}
@@ -210,6 +209,7 @@ public class SceneView extends View {
 		float height = getHeight();
 		float imgW = image.getWidth();
 		float imgH = image.getHeight();
+		scaleFactor = 1;
 		if(width < imgW){
 			scaleFactor = (float)width/imgW;
 		}
@@ -217,7 +217,7 @@ public class SceneView extends View {
 			scaleFactor = (float)height/imgH;
 		}
 		minScaleFactor = scaleFactor;
-		Log.d("FUNK", String.format("minScaleFactor - %f", minScaleFactor));
+		//Log.d("FUNK", String.format("minScaleFactor - %f", minScaleFactor));
 	}
 	
 	// метод вызывается при изменении размера области отображения

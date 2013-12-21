@@ -16,7 +16,7 @@ public class PageImages {
 	private ArrayList<Bitmap> listScene = new ArrayList<Bitmap>();
 	private int currentIndex = 0;
 	
-	final int MIN_LEN_SCENA = 30;
+	final int MIN_LEN_SCENA = 50;
 
 	public PageImages(MangaSource mSource) {
 		this.mangaSource = mSource;
@@ -44,10 +44,10 @@ public class PageImages {
 	 * @return bitmap нового изображения
 	 */
 	private Bitmap copySegmentImg(Bitmap img, int x1, int y1, int x2, int y2) {
+		Log.d("COPY_IMG", String.format("x: %d - %d; y: %d - %d", x1, x2, y1, y2));
 		int width = x2 - x1;
 		int height = y2 - y1;
-		Bitmap scene = Bitmap.createBitmap(width, height,
-				Bitmap.Config.ARGB_8888);
+		Bitmap scene = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 		int[] pixels = new int[width * height];
 		img.getPixels(pixels, 0, width, x1, y1, width, height);
 		scene.setPixels(pixels, 0, width, 0, 0, width, height);
@@ -100,7 +100,7 @@ public class PageImages {
 				isScena = true;
 			}
 		}
-		if(isScena){ // сцена до конца изображения
+		if(isScena && (startScena > MIN_LEN_SCENA)){ // сцена до конца изображения
 			Bitmap scene = this.copySegmentImg(img, 0, 0, widthImg, startScena);
 			listScene.add(index, scene);
 			countScene++;
@@ -159,7 +159,7 @@ public class PageImages {
 				startScena = w;
 			}
 		}
-		if(isScena){ // сцена до конца изображения
+		if(isScena && ((widthImg - startScena) > MIN_LEN_SCENA)){ // сцена до конца изображения
 			Bitmap scene = this.copySegmentImg(img, startScena, 0, widthImg, heightImg);
 			listScene.add(index, scene);
 			countScene++;
@@ -186,24 +186,15 @@ public class PageImages {
 		listScene.clear();
 		listScene.add(currentPageBitmap);
 
-		boolean isCutH = false;
-		boolean isCutW = false;
-
 		for (int cur = 0; cur < listScene.size();) {
-			isCutH = cutByHeight(cur);
-			isCutW = cutByWeigth(cur);
-			if (!(isCutH || isCutW)) {
+			cutByHeight(cur);
+			if (!(cutByWeigth(cur))) {
 				cur++;
 			}
 		}
-		;
 
 		this.currentIndex = 0;
 
-		if (this.currentPageBitmap != null) {
-			this.currentPageBitmap.recycle();
-			this.currentPageBitmap = null;
-		}
 		return true;
 	}
 
@@ -218,6 +209,10 @@ public class PageImages {
 			this.currentIndex++;
 			return this.listScene.get(this.currentIndex);
 		} else {
+			if (this.currentPageBitmap != null) {
+				this.currentPageBitmap.recycle();
+				this.currentPageBitmap = null;
+			}
 			this.currentPageBitmap = this.mangaSource.next();
 			if (this.cutPageToScene() && this.listScene.size() >= 0) {
 				return this.listScene.get(this.currentIndex);
@@ -237,6 +232,10 @@ public class PageImages {
 			this.currentIndex--;
 			return this.listScene.get(this.currentIndex);
 		} else {
+			if (this.currentPageBitmap != null) {
+				this.currentPageBitmap.recycle();
+				this.currentPageBitmap = null;
+			}
 			this.currentPageBitmap = this.mangaSource.prev();
 			if (this.cutPageToScene() && this.listScene.size() >= 0) {
 				this.currentIndex = this.listScene.size()-1;
@@ -256,5 +255,9 @@ public class PageImages {
 			return null;
 		}
 		return this.listScene.get(this.currentIndex);
+	}
+	
+	public Bitmap getFullPage() {
+		return this.currentPageBitmap;
 	}
 }

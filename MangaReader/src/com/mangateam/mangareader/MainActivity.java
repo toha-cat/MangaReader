@@ -15,7 +15,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	private SceneView sceneView = null;
 	private MangaSource mSource = null;
-	Button btnOk;
 	Button btnFM;
 	
 	private static final int REQUEST_LOAD = 1;
@@ -24,11 +23,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
-		btnOk = (Button) findViewById(R.id.button1);
-		btnOk.setOnClickListener(this);
 		
-		btnFM = (Button) findViewById(R.id.button2);
+		btnFM = (Button) findViewById(R.id.btnFM);
 		btnFM.setOnClickListener(this);
 	}
 
@@ -43,14 +39,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	public void onClick(View v) {
 		// по id определеяем кнопку, вызвавшую этот обработчик
 		switch (v.getId()) {
-		case R.id.button1:
-			// кнопка ОК
-			mSource = new MangaSource("/sdcard/test.jpg");
-			sceneView = new SceneView(this);
-			sceneView.setMangaSource(mSource);
-			setContentView(sceneView);
-			break;
-		case R.id.button2:
+		case R.id.btnFM:
 			Log.d("FM", "FM start");
 			Intent intent = new Intent(getBaseContext(), FileDialog.class);
 	        intent.putExtra(FileDialog.START_PATH, "/sdcard");
@@ -70,6 +59,15 @@ public class MainActivity extends Activity implements OnClickListener {
         if (resultCode == Activity.RESULT_OK) {
             String filePath = data.getStringExtra(FileDialog.RESULT_PATH);
             Log.d("FM", filePath);
+            
+            
+            Intent svIntent = new Intent(getBaseContext(), SceneViewActivity.class);
+            
+            svIntent.putExtra(SceneViewActivity.SOURCE_TYPE, SceneViewActivity.SOURCE_TYPE_PATH);
+            svIntent.putExtra(SceneViewActivity.SOURCE_ADDR, filePath);
+            
+            startActivity(svIntent);
+			
         } else if (resultCode == Activity.RESULT_CANCELED) {
             Log.d("FM", "file not selected");
         }
