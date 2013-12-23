@@ -5,7 +5,6 @@ package com.mangateam.mangareader;
 
 import java.util.ArrayList;
 import android.graphics.Bitmap;
-import android.util.Log;
 
 /**
  *
@@ -44,7 +43,6 @@ public class PageImages {
 	 * @return bitmap нового изображения
 	 */
 	private Bitmap copySegmentImg(Bitmap img, int x1, int y1, int x2, int y2) {
-		Log.d("COPY_IMG", String.format("x: %d - %d; y: %d - %d", x1, x2, y1, y2));
 		int width = x2 - x1;
 		int height = y2 - y1;
 		Bitmap scene = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -184,7 +182,7 @@ public class PageImages {
 		}
 
 		listScene.clear();
-		listScene.add(currentPageBitmap);
+		listScene.add(currentPageBitmap.copy(Bitmap.Config.ARGB_8888, true));
 
 		for (int cur = 0; cur < listScene.size();) {
 			cutByHeight(cur);

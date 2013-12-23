@@ -6,7 +6,6 @@ import java.util.Arrays;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 
 public class MangaSourcePath implements MangaSource {
 	
@@ -61,7 +60,6 @@ public class MangaSourcePath implements MangaSource {
 
 	@Override
 	public Bitmap loadCurrentPage() {
-		Log.d("ITERATOR CURRENT", String.valueOf(this.listPointer));
 		if(this.listPointer >= 0 && this.listPointer < fileList.size()){
 			return this.loadImg(fileList.get(this.listPointer));
 		}
@@ -70,7 +68,6 @@ public class MangaSourcePath implements MangaSource {
 
 	@Override
 	public Bitmap next() {
-		Log.d("ITERATOR NEXT", String.valueOf(this.listPointer));
 		if((this.listPointer+1) < fileList.size()){
 			this.listPointer++;
 			return this.loadImg(fileList.get(this.listPointer));
@@ -80,11 +77,27 @@ public class MangaSourcePath implements MangaSource {
 
 	@Override
 	public Bitmap prev() {
-		Log.d("ITERATOR NEXT", String.valueOf(this.listPointer));
 		if(this.listPointer > 0){
 			this.listPointer--;
 			return this.loadImg(fileList.get(this.listPointer));
 		}
 		return null;
+	}
+
+	@Override
+	public void setCurPage(int p) {
+		if(this.listPointer >= 0 && this.listPointer < fileList.size()){
+			this.listPointer = p;
+		}
+	}
+
+	@Override
+	public int getCurPage() {
+		return listPointer;
+	}
+
+	@Override
+	public String getSourceName() {
+		return fileList.get(this.listPointer);
 	}
 }

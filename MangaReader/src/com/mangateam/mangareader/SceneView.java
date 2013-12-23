@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.Log;
@@ -26,8 +25,9 @@ public class SceneView extends View {
 
 	private Bitmap image = null;
 
-	private MangaSource mangaSource = null;
 	private PageImages pageImages = null;
+	
+	private boolean fullPageMod = false;
 
 	private final GestureDetector gestureDetector;
 	private final ScaleGestureDetector scaleGestureDetector;
@@ -69,13 +69,26 @@ public class SceneView extends View {
 	}
 
 	public void setMangaSource(MangaSource mSource) {
-		this.mangaSource = mSource;
 		this.pageImages = new PageImages(mSource);
 		this.image = pageImages.current();
 	}
 	
+	public void viewFullPage() {
+		this.image = pageImages.getFullPage();
+		fullPageMod = true;
+		invalidate();
+		resetScaleFactor();
+	}
+	
+	public void viewSceneMode() {
+		this.image = pageImages.current();
+		fullPageMod = false;
+		invalidate();
+		resetScaleFactor();
+	}
+	
 	private int loadNextImg(){
-		Log.d("NAV", "get next");
+		if(fullPageMod) return -2;
 		Bitmap img = null;
 		img = pageImages.next();
 		if(img != null){
@@ -84,13 +97,12 @@ public class SceneView extends View {
 			invalidate();
 			return 0;
 		}else{
-			Log.d("NAV", "prev null :(");
 			return -1;
 		}
 	}
 	
 	private int loadPrevImg(){
-		Log.d("NAV", "get prev");
+		if(fullPageMod) return -2;
 		Bitmap img = null;
 		img = pageImages.prev();
 		if(img != null){
@@ -99,7 +111,6 @@ public class SceneView extends View {
 			invalidate();
 			return 0;
 		}else{
-			Log.d("NAV", "prev null :(");
 			return -1;
 		}
 	}
@@ -120,8 +131,6 @@ public class SceneView extends View {
 			canvas.drawBitmap(image, null, dst, paint);
 		} catch (Exception e) {
 			// TODO: handle exception
-			Log.v("MangaReader", e.getMessage());
-			Log.v("MangaReader", e.getLocalizedMessage());
 		}
 	}
 	
@@ -217,7 +226,7 @@ public class SceneView extends View {
 			scaleFactor = (float)height/imgH;
 		}
 		minScaleFactor = scaleFactor;
-		//Log.d("FUNK", String.format("minScaleFactor - %f", minScaleFactor));
+
 	}
 	
 	// метод вызывается при изменении размера области отображения

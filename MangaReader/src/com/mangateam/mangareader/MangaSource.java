@@ -13,4 +13,10 @@ public interface MangaSource {
 	Bitmap next();
 
 	Bitmap prev();
+	
+	void setCurPage(int p);
+	
+	int getCurPage();
+	
+	String getSourceName();
 }

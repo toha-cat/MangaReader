@@ -38,4 +38,23 @@ public class MangaSourceFile implements MangaSource {
 	public Bitmap prev() {
 		return null;
 	}
+
+	@Override
+	public void setCurPage(int p) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getCurPage() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public String getSourceName() {
+		// TODO Auto-generated method stub
+		return fname;
+	}
+
 }

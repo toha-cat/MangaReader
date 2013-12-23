@@ -1,21 +1,32 @@
 package com.mangateam.mangareader;
 
-import java.util.logging.Level;
+import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 
 public class MainActivity extends Activity implements OnClickListener {
 
-	private SceneView sceneView = null;
-	private MangaSource mSource = null;
+	private MangaDB mdb;
+	private SQLiteDatabase sqdb;
+	
+	private ArrayList<Integer> mangaId = null;
+	private ArrayList<String> mangaName = null;
+	
 	Button btnFM;
+	ListView lvManga;
 	
 	private static final int REQUEST_LOAD = 1;
 
@@ -24,8 +35,62 @@ public class MainActivity extends Activity implements OnClickListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
+		// указатель на кнопку добавления манги из ФМ
 		btnFM = (Button) findViewById(R.id.btnFM);
+		// привязываем к ней обработчик нажатий
 		btnFM.setOnClickListener(this);
+		
+		// указатель на список манги
+		lvManga = (ListView) findViewById(R.id.lvManga);
+		// привязываем обработчик нажатий на пункты
+		lvManga.setOnItemClickListener(new OnItemClickListener() {
+
+			public void onItemClick(AdapterView<?> av, View v, int position, long id) {
+				Intent svIntent = new Intent(getBaseContext(), SceneViewActivity.class);
+	            svIntent.putExtra(SceneViewActivity.MANGA_ID, mangaId.get(position));
+	            startActivity(svIntent);
+			}
+
+		});
+
+		// Конектимся к базе данных
+	    mdb = new MangaDB(this);
+		sqdb = mdb.getWritableDatabase();
+		
+		// списки имен и ид манги
+		mangaId = new ArrayList<Integer>();
+		mangaName = new ArrayList<String>();
+		
+		// Составим и отобразим список
+		viewListManga();
+	}
+	
+	private void viewListManga() {
+		
+		mangaId.clear();
+		mangaName.clear();
+		
+		String query = "SELECT " + MangaDB.UID + ", " + MangaDB.SOURCE + " FROM " + MangaDB.TABLE_NAME_MANGA_LIST;
+		Cursor cursor = sqdb.rawQuery(query, null);
+		while (cursor.moveToNext()) {
+			mangaId.add(cursor.getInt(cursor.getColumnIndex(MangaDB.UID)));
+			mangaName.add(cursor.getString(cursor.getColumnIndex(MangaDB.SOURCE)));
+		}
+		cursor.close();
+		
+	    // создаем адаптер
+	    ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mangaName);
+	    // присваиваем адаптер списку
+	    lvManga.setAdapter(adapter);
+	}
+
+	
+	@Override
+	protected void onDestroy(){
+		// закрываем соединения с базой данных
+		sqdb.close();
+		mdb.close();
+		super.onDestroy();
 	}
 
 	@Override
@@ -60,14 +125,14 @@ public class MainActivity extends Activity implements OnClickListener {
             String filePath = data.getStringExtra(FileDialog.RESULT_PATH);
             Log.d("FM", filePath);
             
-            
-            Intent svIntent = new Intent(getBaseContext(), SceneViewActivity.class);
-            
-            svIntent.putExtra(SceneViewActivity.SOURCE_TYPE, SceneViewActivity.SOURCE_TYPE_PATH);
-            svIntent.putExtra(SceneViewActivity.SOURCE_ADDR, filePath);
-            
-            startActivity(svIntent);
+            String insertQuery = "INSERT INTO " + 
+    				MangaDB.TABLE_NAME_MANGA_LIST + " (" + MangaDB.TYPE + ", " + MangaDB.SOURCE + ", " + MangaDB.CURRENT_PAGE 
+    			     + ") VALUES ('" + SceneViewActivity.SOURCE_TYPE_PATH + "', '" + filePath +"', '0')";
+            Log.d("SQL", insertQuery);
+    		sqdb.execSQL(insertQuery);
 			
+    		viewListManga();
+    		
         } else if (resultCode == Activity.RESULT_CANCELED) {
             Log.d("FM", "file not selected");
         }

@@ -3,7 +3,7 @@
 
     <string name="app_name">MangaReader</string>
     <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
+
     <string name="location">Путь</string>
     <string name="cant_read_folder">нельзя открыть директорию!</string>
     <string name="nnew">Новый</string>
@@ -14,4 +14,9 @@
     <string name="no_data">Нет данных</string>
     <color name="gray">#ffff0000</color>
     <string name="err">Ошибка</string>
+    
+    <string name="action_view_full_page">Отобразить страницу полностью</string>
+    <string name="action_view_scene">Отобразить в виде сцен</string>
+    <string name="action_view_filename">Отобразить имя текущего файла</string>
+    
 </resources>
